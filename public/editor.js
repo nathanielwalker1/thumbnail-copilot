@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize DOM elements
     const canvas = document.getElementById('imageCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimize for read operations
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const autoEnhanceBtn = document.querySelector('.auto-enhance-btn');
+    const resetBtn = document.querySelector('.reset-btn');
 
-    const imageData = sessionStorage.getItem('uploadedImage');
-    const analysisData = sessionStorage.getItem('imageAnalysis');
-
-    // Initialize adjustments
+    // Initialize state
+    let originalImage = null; // Store the original image
     let adjustments = {
         brightness: 0,
         contrast: 0,
@@ -14,10 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sharpness: 0
     };
 
-    // Debug logs to check if elements exist
+    // Load stored data
+    const imageData = sessionStorage.getItem('uploadedImage');
+    const analysisData = sessionStorage.getItem('imageAnalysis');
+
     console.log('Canvas Element:', canvas);
     console.log('Loading Overlay:', loadingOverlay);
 
+    // Initialize UI
     if (imageData) {
         loadImage(imageData);
     } else {
@@ -26,31 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (analysisData) {
-        updateUIWithAnalysis(JSON.parse(analysisData));
-    } else {
-        console.warn('No analysis data found in sessionStorage.');
-        showError('No analysis data available. Please try uploading again.');
+        const analysis = JSON.parse(analysisData);
+        updateUIWithAnalysis(analysis);
+        // Enable auto-enhance button
+        if (autoEnhanceBtn) {
+            autoEnhanceBtn.disabled = false;
+            autoEnhanceBtn.addEventListener('click', () => applyAutoEnhancements(analysis));
+        }
     }
 
-    function loadImage(data) {
-        showLoading();
-        const img = new Image();
-        img.onload = () => {
-            hideLoading();
-            // Set canvas size to match image
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            console.log('Image loaded successfully');
-        };
-        img.onerror = () => {
-            hideLoading();
-            console.error('Failed to load the image.');
-            showError('Failed to load the image. Please try uploading again.');
-        };
-        img.src = data; // Use the base64 data
-    }
-
+    // Utility Functions
     function showLoading() {
         if (loadingOverlay) loadingOverlay.style.display = 'flex';
     }
@@ -60,38 +50,102 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showError(message) {
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
+        console.error(message);
+        // You can add UI error display here
+    }
+
+    // Helper Functions for Status Classes
+    function getStatus(value) {
+        if (!value) return 'unknown';
+        const lowercase = value.toLowerCase();
+        if (lowercase.includes('good') || lowercase.includes('strong')) return 'good';
+        if (lowercase.includes('weak') || 
+            lowercase.includes('poor') || 
+            lowercase.includes('slightly')) return 'warning';
+        return 'unknown';
+    }
+
+    function getStatusClass(value) {
+        const status = getStatus(value);
+        switch (status) {
+            case 'good':
+                return 'good';
+            case 'warning':
+                return 'warning';
+            default:
+                return 'warning';
         }
     }
 
-    function updateUIWithAnalysis(analysis) {
-        console.log('Analysis data received:', analysis);
+    // Image Loading and Drawing
+    function loadImage(data) {
+        showLoading();
+        originalImage = new Image();
+        originalImage.onload = () => {
+            hideLoading();
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+            ctx.drawImage(originalImage, 0, 0);
+            console.log('Image loaded successfully');
+            initializeSliders(); // Initialize slider listeners after image loads
+        };
+        originalImage.onerror = () => {
+            hideLoading();
+            showError('Failed to load the image. Please try uploading again.');
+        };
+        originalImage.src = data; // Use the base64 data
+    }
 
+    // Slider Controls
+    function initializeSliders() {
+        const sliders = {
+            brightness: document.getElementById('brightness'),
+            contrast: document.getElementById('contrast'),
+            saturation: document.getElementById('saturation'),
+            sharpness: document.getElementById('sharpness')
+        };
+
+        const sliderValues = {
+            brightness: document.getElementById('brightnessValue'),
+            contrast: document.getElementById('contrastValue'),
+            saturation: document.getElementById('saturationValue'),
+            sharpness: document.getElementById('sharpnessValue')
+        };
+
+        // Add event listeners to sliders
+        Object.keys(sliders).forEach(key => {
+            const slider = sliders[key];
+            const valueDisplay = sliderValues[key];
+            
+            if (slider && valueDisplay) {
+                slider.addEventListener('input', (e) => {
+                    adjustments[key] = parseInt(e.target.value);
+                    valueDisplay.textContent = adjustments[key];
+                    applyAdjustments(); // Apply adjustments in real-time
+                });
+            }
+        });
+    }
+
+    // Update UI with analysis data
+    function updateUIWithAnalysis(analysis) {
+        console.log('Updating UI with analysis:', analysis);
+
+        // Get UI elements
         const scoreElement = document.querySelector('.score-text');
         const scoreBar = document.querySelector('.score-progress');
         const compositionList = document.querySelector('.composition-analysis ul');
         const thoughtsSummary = document.getElementById('thoughts-summary'); // New element for thoughts
 
-        // Check if elements exist
-        console.log('Score Element:', scoreElement);
-        console.log('Score Bar:', scoreBar);
-        console.log('Composition List:', compositionList);
-        console.log('Thoughts Summary Element:', thoughtsSummary);
-
         // Update score
         if (scoreElement && scoreBar) {
-            const score = analysis.quality_score || 0; // Default to 0 if null
+            const score = analysis.quality_score || 0;
             scoreElement.textContent = `${score}/100`;
             scoreBar.style.width = `${score}%`;
         }
 
         // Prepare composition analysis items
         const items = [
-            { label: 'Photo clarity', value: analysis.photo_clarity },
-            { label: 'Focal Point', value: analysis.focal_point },
             { label: 'Brightness', value: analysis.brightness },
             { label: 'Contrast', value: analysis.contrast },
             { label: 'Saturation', value: analysis.saturation },
@@ -118,64 +172,128 @@ document.addEventListener('DOMContentLoaded', () => {
             thoughtsSummary.textContent = analysis.alex_thoughts || 'No thoughts available.';
         }
 
-        // Enable auto-enhance and auto-circle buttons
-        const autoEnhanceBtn = document.querySelector('.auto-enhance-btn');
-        const circleProductBtn = document.querySelector('.circle-product-btn');
-        if (autoEnhanceBtn) autoEnhanceBtn.disabled = false;
-        if (circleProductBtn) circleProductBtn.disabled = false;
+        // Store analysis data for later use
+        sessionStorage.setItem('imageAnalysis', JSON.stringify(analysis));
+    }
 
-        // Update suggested text
-        const suggestedTextBtn = document.querySelector('.suggested-text-btn');
-        if (suggestedTextBtn) {
-            suggestedTextBtn.textContent = analysis.suggested_text || 'No suggestion available';
+    // Auto-Enhancement
+    function applyAutoEnhancements(analysis) {
+        console.log('Applying auto-enhancements based on:', analysis);
+
+        // Reset adjustments
+        adjustments = {
+            brightness: 0,
+            contrast: 0,
+            saturation: 0,
+            sharpness: 0
+        };
+
+        // Parse analysis and set adjustments
+        if (analysis.brightness) {
+            if (analysis.brightness.toLowerCase().includes('poor')) {
+                adjustments.brightness += 30;
+            }
         }
-    }
+        if (analysis.contrast) {
+            if (analysis.contrast.toLowerCase().includes('poor')) {
+                adjustments.contrast += 30;
+            }
+        }
+        if (analysis.saturation) {
+            if (analysis.saturation.toLowerCase().includes('poor')) {
+                adjustments.saturation += 30;
+            }
+        }
+        if (analysis.sharpness) {
+            if (analysis.sharpness.toLowerCase().includes('poor') || 
+                analysis.sharpness.toLowerCase().includes('blurry')) {
+                adjustments.sharpness += 30;
+            }
+        }
 
-    function getStatus(value) {
-        if (!value) return 'unknown';
-        const lowercase = value.toLowerCase();
-        if (lowercase.includes('good') || lowercase.includes('strong')) return 'good';
-        if (lowercase.includes('weak') || lowercase.includes('poor')) return 'bad';
-        return 'unknown';
-    }
-
-    function getStatusClass(value) {
-        if (!value) return 'warning';
-        const status = getStatus(value);
-        return status === 'good' ? 'good' : 'warning';
-    }
-
-    // Slider event listeners
-    const sliders = {
-        brightness: document.getElementById('brightness'),
-        contrast: document.getElementById('contrast'),
-        saturation: document.getElementById('saturation'),
-        sharpness: document.getElementById('sharpness')
-    };
-
-    Object.keys(sliders).forEach(key => {
-        const slider = sliders[key];
-        slider.addEventListener('input', (e) => {
-            adjustments[key] = parseInt(e.target.value);
-            applyAdjustments(); // Apply adjustments in real-time
+        // Update slider positions
+        Object.keys(adjustments).forEach(key => {
+            const slider = document.getElementById(key);
+            const valueDisplay = document.getElementById(`${key}Value`);
+            if (slider && valueDisplay) {
+                slider.value = adjustments[key];
+                valueDisplay.textContent = adjustments[key];
+            }
         });
-    });
+
+        // Apply the adjustments
+        applyAdjustments();
+    }
 
     function applyAdjustments() {
-        if (!imageData) return; // Ensure image data is available
+        if (!originalImage) return; // Ensure image data is available
 
-        const img = new Image();
-        img.src = imageData; // Use the base64 data
-        img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Draw the original image
+        requestAnimationFrame(() => {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Apply filters based on adjustments
-            ctx.filter = `brightness(${100 + adjustments.brightness}%) ` +
-                         `contrast(${100 + adjustments.contrast}%) ` +
-                         `saturate(${100 + adjustments.saturation}%)`;
+            // Set filters
+            ctx.filter = `brightness(${100 + adjustments.brightness}%) 
+                         contrast(${100 + adjustments.contrast}%) 
+                         saturate(${100 + adjustments.saturation}%)`;
 
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Redraw the image with adjustments
-        };
+            // Draw image with filters
+            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+            // Apply sharpness if needed
+            if (adjustments.sharpness !== 0) {
+                applySharpness();
+            }
+        });
     }
+
+    function applySharpness() {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        const factor = adjustments.sharpness / 100;
+
+        // Simple sharpening algorithm
+        for (let i = 0; i < data.length; i += 4) {
+            if (i % (canvas.width * 4) === 0) continue; // Skip first pixel of each row
+            if (i < canvas.width * 4) continue; // Skip first row
+            
+            for (let j = 0; j < 3; j++) {
+                const current = data[i + j];
+                const above = data[i - canvas.width * 4 + j];
+                const left = data[i - 4 + j];
+                
+                data[i + j] = current + (2 * current - above - left) * factor;
+            }
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Reset functionality
+    resetBtn.addEventListener('click', () => {
+        // Reset adjustments
+        adjustments = {
+            brightness: 0,
+            contrast: 0,
+            saturation: 0,
+            sharpness: 0
+        };
+
+        // Reset sliders
+        Object.keys(adjustments).forEach(key => {
+            const slider = document.getElementById(key);
+            const valueDisplay = document.getElementById(`${key}Value`);
+            if (slider && valueDisplay) {
+                slider.value = 0;
+                valueDisplay.textContent = '0';
+            }
+        });
+
+        // Reset image
+        if (originalImage) {
+            ctx.filter = 'none';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(originalImage, 0, 0);
+        }
+    });
 });

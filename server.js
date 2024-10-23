@@ -28,17 +28,15 @@ app.post('/analyze-image', upload.single('image'), async (req, res) => {
         const prompt = `Analyze this image for use as an Amazon product thumbnail. 
         Provide analysis in exactly this format:
 
-        ALEX_THOUGHTS: [Your thoughts on the image, what you think of it. This should be a single sentence, a positive tone with a recommendation for improvement. Speak with first person, like you're helping a friend improve their image..]
+        ALEX_THOUGHTS: [Your thoughts on the image, including things like focal point, photo clarity etc. This should be a single sentence, a positive tone with a recommendation for improvement. Speak with first person, like you're helping a friend improve their image..]
 
-        1. CLARITY: [Strong/Weak]
-        2. FOCAL_POINT: [Strong/Weak]
-        3. BRIGHTNESS: [Good/Poor]
-        4. CONTRAST: [Good/Poor]
-        5. SATURATION: [Good/Poor]
-        6. SHARPNESS: [Good/Poor]
+        1. BRIGHTNESS: [Good/Poor]
+        2. CONTRAST: [Good/Poor]
+        3. SATURATION: [Good/Poor]
+        4. SHARPNESS: [Good/Poor]
         SCORE: [0-100]
         
-        Each of these represent 16.7% of the total score. If any of these are poor, the score will be lower. Note that the score should never be 100%, and not all sections should be marked as 'Strong' or 'Good' as there will always be room for improvement. For each case, there should be a minimum of 2 'Weak' or 'Poor' sections, that is consistent with what is called out in ALEX_THOUGHTS.
+        Each of these represent 25% of the total score. If any of these are poor, the score will be lower. Note that the score should never be 100%, and not all sections should be marked as 'Strong' or 'Good' as there will always be room for improvement. PLEASE MAKE SURE: there should be a minimum of 2 'Weak' or 'Poor' categories, that is consistent with what is called out in ALEX_THOUGHTS.
         
         For example, if clarity, focal_point, brightness, saturation are all good, but contrast and sharpness are poor, the score will be 67%.
         
@@ -84,11 +82,6 @@ app.post('/analyze-image', upload.single('image'), async (req, res) => {
             contrast: extractValue(messageContent, 'CONTRAST'),
             saturation: extractValue(messageContent, 'SATURATION'),
             sharpness: extractValue(messageContent, 'SHARPNESS'),
-            product_location: {
-                x: 0.5, // Default values
-                y: 0.5,
-                size: 0.15
-            },
             suggested_text: extractValue(messageContent, 'SUGGESTED_TEXT'),
             alex_thoughts: extractValue(messageContent, 'ALEX_THOUGHTS') // Extract Alex's thoughts
         };
