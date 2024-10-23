@@ -92,8 +92,14 @@
                 </div>
             </div>
             <div class="right-section">
-                <div class="image-display">
-                    <img src="placeholder-image.jpg" alt="User's image" id="user-image">
+                <div class="image-section">
+                    <h3>Your image:</h3>
+                    <div class="image-display">
+                        <canvas id="imageCanvas"></canvas>
+                        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="section-container suggested-text">
                     <h3>
