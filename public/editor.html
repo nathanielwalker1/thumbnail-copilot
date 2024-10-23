@@ -55,6 +55,30 @@
                     </ul>
                     <button class="btn auto-enhance-btn">Auto-enhance</button>
                 </div>
+                <div class="section-container enhancement-toggle">
+                    <h3>
+                        <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M53.3332 40.8266L62.1598 32L53.3332 23.1733V10.6666H40.8265L31.9998 1.83997L23.1732 10.6666H10.6665V23.1733L1.83984 32L10.6665 40.8266V53.3333H23.1732L31.9998 62.16L40.8265 53.3333H53.3332V40.8266V40.8266ZM31.9998 48C23.1732 48 15.9998 40.8266 15.9998 32C15.9998 23.1733 23.1732 16 31.9998 16C40.8265 16 47.9998 23.1733 47.9998 32C47.9998 40.8266 40.8265 48 31.9998 48Z" fill="currentColor"/>
+                        </svg>
+                        Enhancement Toggle
+                    </h3>
+                    <div class="slider-container">
+                        <label for="brightness">Brightness: <span id="brightnessValue">0</span></label>
+                        <input type="range" id="brightness" min="-100" max="100" value="0">
+                    </div>
+                    <div class="slider-container">
+                        <label for="contrast">Contrast: <span id="contrastValue">0</span></label>
+                        <input type="range" id="contrast" min="-100" max="100" value="0">
+                    </div>
+                    <div class="slider-container">
+                        <label for="saturation">Saturation: <span id="saturationValue">0</span></label>
+                        <input type="range" id="saturation" min="-100" max="100" value="0">
+                    </div>
+                    <div class="slider-container">
+                        <label for="sharpness">Sharpness: <span id="sharpnessValue">0</span></label>
+                        <input type="range" id="sharpness" min="-100" max="100" value="0">
+                    </div>
+                </div>
                 <div class="section-container product-detection">
                     <h3>
                         <svg width="24" height="24" viewBox="0 0 71 71" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -65,30 +89,6 @@
                     </h3>
                     <p>Product detected with 95% confidence</p>
                     <button class="btn circle-product-btn">Circle product</button>
-                </div>
-                <div class="section-container enhancement-toggle">
-                    <h3>
-                        <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M53.3332 40.8266L62.1598 32L53.3332 23.1733V10.6666H40.8265L31.9998 1.83997L23.1732 10.6666H10.6665V23.1733L1.83984 32L10.6665 40.8266V53.3333H23.1732L31.9998 62.16L40.8265 53.3333H53.3332V40.8266V40.8266ZM31.9998 48C23.1732 48 15.9998 40.8266 15.9998 32C15.9998 23.1733 23.1732 16 31.9998 16C40.8265 16 47.9998 23.1733 47.9998 32C47.9998 40.8266 40.8265 48 31.9998 48Z" fill="currentColor"/>
-                        </svg>
-                        Enhancement Toggle
-                    </h3>
-                    <div class="slider-container">
-                        <label for="brightness">Brightness</label>
-                        <input type="range" id="brightness" min="0" max="100" value="50">
-                    </div>
-                    <div class="slider-container">
-                        <label for="contrast">Contrast</label>
-                        <input type="range" id="contrast" min="0" max="100" value="50">
-                    </div>
-                    <div class="slider-container">
-                        <label for="saturation">Saturation</label>
-                        <input type="range" id="saturation" min="0" max="100" value="50">
-                    </div>
-                    <div class="slider-container">
-                        <label for="sharpness">Sharpness</label>
-                        <input type="range" id="sharpness" min="0" max="100" value="50">
-                    </div>
                 </div>
             </div>
             <div class="right-section">

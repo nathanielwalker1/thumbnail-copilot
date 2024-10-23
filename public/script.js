@@ -11,7 +11,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('imageCanvas');
     const ctx = canvas && canvas.getContext('2d');
     let currentImage = null;
+    let originalImage = null;
     let currentAspectRatio = '16:9';
+
+    const sliders = {
+        brightness: document.getElementById('brightness'),
+        contrast: document.getElementById('contrast'),
+        saturation: document.getElementById('saturation'),
+        sharpness: document.getElementById('sharpness')
+    };
+
+    const sliderValues = {
+        brightness: document.getElementById('brightnessValue'),
+        contrast: document.getElementById('contrastValue'),
+        saturation: document.getElementById('saturationValue'),
+        sharpness: document.getElementById('sharpnessValue')
+    };
+
+    let adjustments = {
+        brightness: 0,
+        contrast: 0,
+        saturation: 0,
+        sharpness: 0
+    };
+
+    let isAdjusting = false;
+    let adjustmentTimeout = null;
 
     if (uploadBtn && fileInput) {
         uploadBtn.addEventListener('click', () => {
@@ -49,6 +74,27 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             hideLoading();
         }
+
+        Object.keys(sliders).forEach(key => {
+            const slider = sliders[key];
+            const valueDisplay = sliderValues[key];
+
+            slider.addEventListener('input', (e) => {
+                adjustments[key] = parseInt(e.target.value);
+                valueDisplay.textContent = adjustments[key];
+                isAdjusting = true;
+                clearTimeout(adjustmentTimeout);
+                adjustmentTimeout = setTimeout(() => {
+                    isAdjusting = false;
+                    applyAdjustments();
+                }, 100);
+            });
+
+            slider.addEventListener('change', () => {
+                isAdjusting = false;
+                applyAdjustments();
+            });
+        });
     }
 
     function validateFile(file) {
@@ -96,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentImage = new Image();
         currentImage.onload = () => {
             hideLoading();
+            originalImage = currentImage;
             setAspectRatio(currentAspectRatio);
         };
         currentImage.onerror = () => {
@@ -107,12 +154,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setAspectRatio(ratio) {
         currentAspectRatio = ratio;
-        if (currentImage && canvas) {
-            const [width, height] = calculateDimensions(currentImage, ratio);
+        if (originalImage && canvas) {
+            const [width, height] = calculateDimensions(originalImage, ratio);
             canvas.width = width;
             canvas.height = height;
-            ctx.drawImage(currentImage, 0, 0, width, height);
+            applyAdjustments();
         }
+    }
+
+    function applyAdjustments() {
+        if (!originalImage || !canvas || isAdjusting) return;
+
+        requestAnimationFrame(() => {
+            const [width, height] = calculateDimensions(originalImage, currentAspectRatio);
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.filter = `brightness(${100 + adjustments.brightness}%) ` +
+                         `contrast(${100 + adjustments.contrast}%) ` +
+                         `saturate(${100 + adjustments.saturation}%)`;
+
+            ctx.drawImage(originalImage, 0, 0, width, height);
+
+            // Apply sharpness (unsharp masking)
+            if (adjustments.sharpness !== 0) {
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const sharpenedData = applySharpen(imageData, adjustments.sharpness);
+                ctx.putImageData(sharpenedData, 0, 0);
+            }
+        });
+    }
+
+    function applySharpen(imageData, amount) {
+        const w = imageData.width;
+        const h = imageData.height;
+        const data = imageData.data;
+        const buffer = new Uint8ClampedArray(data);
+        const kernel = [
+            [0, -1, 0],
+            [-1, 5, -1],
+            [0, -1, 0]
+        ];
+        const factor = 1 + (amount / 100);
+
+        for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+                const idx = (y * w + x) * 4;
+                for (let c = 0; c < 3; c++) {
+                    let val = 0;
+                    for (let ky = -1; ky <= 1; ky++) {
+                        for (let kx = -1; kx <= 1; kx++) {
+                            const kdx = ((y + ky) * w + (x + kx)) * 4 + c;
+                            val += data[kdx] * kernel[ky + 1][kx + 1];
+                        }
+                    }
+                    buffer[idx + c] = Math.min(255, Math.max(0, data[idx + c] + (val - data[idx + c]) * factor));
+                }
+            }
+        }
+
+        return new ImageData(buffer, w, h);
     }
 
     function calculateDimensions(image, ratio) {
