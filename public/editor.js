@@ -434,4 +434,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize text controls
     initializeTextControls();
+
+    // Add this function to handle downloading the image
+    function downloadImage() {
+        if (!originalImage) return; // Ensure there is an image to download
+
+        // Create a link element
+        const link = document.createElement('a');
+        link.download = 'thumbnail.png'; // Set the default file name
+
+        // Convert the canvas to a data URL
+        link.href = canvas.toDataURL('image/png');
+
+        // Programmatically click the link to trigger the download
+        link.click();
+    }
+
+    // Add event listener for the download button
+    const downloadBtn = document.querySelector('.download-btn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', downloadImage);
+    }
 });
