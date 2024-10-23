@@ -12,8 +12,8 @@ We're creating a thumbnail editing tool that allows users to create ane edit eng
 2. GPT-4V Integration:
 - Use GPT-4V to analyze the image and provide feedback on the image quality and suitability for a thumbnail
 - Detect main product location
-- Assess photo clarity, focal point, lighting, whether there's text on it, what enhancements need to be made (e.g. brightness, contrast, saturation, sharpness)
-- Evaluate overall thumbnail effectiveness
+- Assess photo clarity (goood or bad), focal point (strong or weak), brightness (slightly bright or slightly dark), contrast (slightly high or slightly low), saturation (slightly high or slightly low), sharpness (slightly sharp or slightly blurry)
+- Evaluate overall thumbnail effectiveness and give it a score out of 100
 - Generate specific numerical recommendations for improvements
 - Generate potential thumbnail text to display
 
@@ -84,7 +84,9 @@ THUMBNAIL-COPILOT
 ├── node_modules/
 ├── public/
 │   ├── index.html
-│   ├── script.js
+│   ├── editor.html
+│   ├── editor.js
+│   ├── home.js
 │   └── style.css
 │   └── components/
 ├── requirements/
