@@ -39,10 +39,13 @@ h1 {
 }
 
 h2 {
-    font-size: 24px;
+    font-size: 20px;
     color: #666;
     margin-bottom: 30px;
     font-weight: 500;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .upload-container {
@@ -78,4 +81,301 @@ h2 {
     color: #888;
     font-size: 14px;
     margin-top: 10px;
+}
+
+/* Editor page styles */
+.editor-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.editor-main {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.left-section, .right-section {
+    flex: 1;
+}
+
+.analysis-score {
+    margin-bottom: 20px;
+}
+
+.analysis-score h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.score-bar {
+    background-color: #e0e0e0;
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.score-progress {
+    background-color: #6c5ce7;
+    height: 100%;
+}
+
+.score-text {
+    color: #6c5ce7;
+    font-weight: bold;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.auto-enhance-btn, .circle-product-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn svg {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #5b4bc7;
+}
+
+.section-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.composition-analysis ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.composition-analysis li {
+    margin-bottom: 5px;
+}
+
+.composition-analysis li::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+}
+
+.composition-analysis li.good::before {
+    background-image: url('/components/good.svg');
+}
+
+.composition-analysis li.warning::before {
+    background-image: url('/components/Bad.svg');
+}
+
+.slider-container {
+    margin-bottom: 10px;
+}
+
+.slider-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.slider-container input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    background: #e0e0e0;
+    outline: none;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    cursor: pointer;
+    border: 4px solid #fff;
+    box-shadow: -407px 0 0 400px #6c5ce7;
+}
+
+.slider-container input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    cursor: pointer;
+    border: 4px solid #fff;
+    box-shadow: -407px 0 0 400px #6c5ce7;
+}
+
+.image-display {
+    margin-bottom: 20px;
+}
+
+.image-display img {
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.suggested-text-container {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.suggested-text-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    text-align: left;
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: 'Clash Display', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.suggested-text-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.custom-text-input {
+    width: calc(100% - 20px); /* Subtracting padding */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: 'Clash Display', sans-serif;
+    font-size: 14px;
+}
+
+.resize-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.resize-btn:hover {
+    background-color: #5b4bc7;
+}
+
+footer {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.download-btn {
+    background-color: #6c5ce7;
+    color: white;
+}
+
+.reset-btn {
+    background-color: white;
+    color: #6c5ce7;
+    border: 1px solid #e0e0e0;
+}
+
+.reset-btn:hover {
+    background-color: #f5f5f5;
+}
+
+@media (max-width: 768px) {
+    .editor-main {
+        flex-direction: column;
+    }
+}
+
+.btn svg, h3 svg {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+h3 {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.auto-enhance-btn, .circle-product-btn {
+    flex: 1;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
 }
