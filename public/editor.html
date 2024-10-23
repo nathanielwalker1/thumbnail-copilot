@@ -25,7 +25,6 @@
                     </div>
                 </div>
                 
-                <!-- New Container for Alex's Thoughts -->
                 <div class="thoughts-container">
                     <h3>
                         <img src="/components/thoughts.svg" alt="Thoughts Icon" class="thoughts-icon">
@@ -40,17 +39,15 @@
                         Composition
                     </h3>
                     <ul>
-                        <li class="good">Photo clarity: good</li>
-                        <li class="good">Focal Point: strong</li>
-                        <li class="warning">Brightness: slightly dark</li>
-                        <li class="warning">Contrast: slightly low</li>
-                        <li class="warning">Saturation: slightly low</li>
-                        <li class="warning">Sharpness: slightly blurry</li>
+                        <li class="good">Brightness: Not analyzed</li>
+                        <li class="good">Contrast: Not analyzed</li>
+                        <li class="warning">Saturation: Not analyzed</li>
+                        <li class="warning">Sharpness: Not analyzed</li>
                     </ul>
                     <button class="btn auto-enhance-btn">
                         <img src="/components/auto-enhance.svg" alt="Auto-enhance Icon" class="btn-icon">
                         Auto-enhance
-                    </button> <!-- Added Auto-enhance button with icon -->
+                    </button>
                 </div>
 
                 <div class="section-container enhancement-toggle">
@@ -94,7 +91,23 @@
                 <div class="section-container suggested-text">
                     <h3>Suggested Thumbnail Text</h3>
                     <button class="btn suggested-text-btn">"Watch before you buy!"</button>
-                    <input type="text" placeholder="Enter custom text" class="custom-text-input">
+                    <input type="text" placeholder="Enter custom text" class="custom-text-input" id="customTextInput">
+                    <button class="btn add-text-btn">Add</button> <!-- Add button for text overlay -->
+                </div>
+                <div class="section-container text-controls">
+                    <h3>Text Controls</h3>
+                    <label for="fontSelect">Font:</label>
+                    <select id="fontSelect">
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Courier New">Courier New</option>
+                    </select>
+                    <label for="colorPicker">Color:</label>
+                    <input type="color" id="colorPicker" value="#000000">
+                    <label for="textSize">Size:</label>
+                    <input type="range" id="textSize" min="10" max="100" value="20">
                 </div>
                 <div class="section-container resize-options">
                     <h3>Resize Image</h3>

@@ -1,10 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize DOM elements
     const canvas = document.getElementById('imageCanvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimize for read operations
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const loadingOverlay = document.getElementById('loadingOverlay');
     const autoEnhanceBtn = document.querySelector('.auto-enhance-btn');
     const resetBtn = document.querySelector('.reset-btn');
+    const customTextInput = document.getElementById('customTextInput');
+    const fontSelect = document.getElementById('fontSelect');
+    const colorPicker = document.getElementById('colorPicker');
+    const textSizeSlider = document.getElementById('textSize');
+    const addTextBtn = document.querySelector('.add-text-btn');
 
     // Initialize state
     let originalImage = null; // Store the original image
@@ -14,6 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
         saturation: 0,
         sharpness: 0
     };
+    let textOverlay = null; // Store a single text overlay
+    let isDraggingText = false; // Track dragging state
+    let dragOffsetX = 0; // Offset for dragging
+    let dragOffsetY = 0; // Offset for dragging
 
     // Load stored data
     const imageData = sessionStorage.getItem('uploadedImage');
@@ -88,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.drawImage(originalImage, 0, 0);
             console.log('Image loaded successfully');
             initializeSliders(); // Initialize slider listeners after image loads
+            drawTextOverlay(); // Draw any existing text overlay
         };
         originalImage.onerror = () => {
             hideLoading();
@@ -244,30 +254,151 @@ document.addEventListener('DOMContentLoaded', () => {
             if (adjustments.sharpness !== 0) {
                 applySharpness();
             }
+
+            // Draw text overlay
+            drawTextOverlay(); // Ensure this function is called correctly
         });
     }
 
-    function applySharpness() {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        const factor = adjustments.sharpness / 100;
+    // Draw text overlay
+    function drawTextOverlay() {
+        if (textOverlay) {
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            ctx.fillStyle = textOverlay.color;
+            ctx.textAlign = 'center'; // Center text horizontally
+            ctx.textBaseline = 'middle'; // Center text vertically
 
-        // Simple sharpening algorithm
-        for (let i = 0; i < data.length; i += 4) {
-            if (i % (canvas.width * 4) === 0) continue; // Skip first pixel of each row
-            if (i < canvas.width * 4) continue; // Skip first row
-            
-            for (let j = 0; j < 3; j++) {
-                const current = data[i + j];
-                const above = data[i - canvas.width * 4 + j];
-                const left = data[i - 4 + j];
+            // Draw the text
+            ctx.fillText(textOverlay.text, textOverlay.x, textOverlay.y);
+        }
+    }
+
+    // Add text overlay functionality
+    addTextBtn.addEventListener('click', () => {
+        const text = customTextInput.value;
+        const font = fontSelect.value;
+        const color = colorPicker.value;
+        const size = parseInt(textSizeSlider.value);
+
+        if (text) {
+            // Replace existing text overlay
+            textOverlay = { // Store the new text overlay
+                text: text,
+                font: font,
+                color: color,
+                size: size,
+                x: canvas.width / 2, // Centered by default
+                y: canvas.height / 2  // Centered by default
+            };
+            applyAdjustments(); // Use this instead of drawTextOverlay()
+            console.log('Added text overlay:', textOverlay);
+        }
+    });
+
+    // Initialize text controls with real-time updates
+    function initializeTextControls() {
+        // Font selection - real-time update
+        fontSelect.addEventListener('change', () => {
+            if (textOverlay) {
+                textOverlay.font = fontSelect.value;
+                applyAdjustments(); // This will redraw everything including text
+                console.log('Font updated:', textOverlay.font);
+            }
+        });
+
+        // Color picker - real-time update
+        colorPicker.addEventListener('input', () => {
+            if (textOverlay) {
+                textOverlay.color = colorPicker.value;
+                applyAdjustments();
+                console.log('Color updated:', textOverlay.color);
+            }
+        });
+
+        // Size slider - real-time update
+        textSizeSlider.addEventListener('input', () => {
+            if (textOverlay) {
+                textOverlay.size = parseInt(textSizeSlider.value);
+                applyAdjustments();
+                console.log('Size updated:', textOverlay.size);
+            }
+        });
+    }
+
+    // Add mouse event listeners for text dragging
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (textOverlay) {
+            // Check if mouse is over text
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            const textWidth = ctx.measureText(textOverlay.text).width;
+            const textHeight = parseInt(textOverlay.size); // Approximate height
+
+            // Define text bounds
+            const textBounds = {
+                left: textOverlay.x - textWidth / 2,
+                right: textOverlay.x + textWidth / 2,
+                top: textOverlay.y - textHeight / 2,
+                bottom: textOverlay.y + textHeight / 2
+            };
+
+            // Check if mouse is over text
+            if (x >= textBounds.left && x <= textBounds.right && 
+                y >= textBounds.top && y <= textBounds.bottom) {
+                canvas.style.cursor = 'move';
                 
-                data[i + j] = current + (2 * current - above - left) * factor;
+                if (isDraggingText) {
+                    requestAnimationFrame(() => {
+                        textOverlay.x = x; // Corrected
+                        textOverlay.y = y; // Corrected
+                        applyAdjustments(); // Redraw everything
+                    });
+                }
+            } else {
+                canvas.style.cursor = 'default';
             }
         }
-        
-        ctx.putImageData(imageData, 0, 0);
-    }
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if (textOverlay) {
+            // Check if click is on text
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            const textWidth = ctx.measureText(textOverlay.text).width;
+            const textHeight = parseInt(textOverlay.size);
+
+            // Define text bounds
+            const textBounds = {
+                left: textOverlay.x - textWidth / 2,
+                right: textOverlay.x + textWidth / 2,
+                top: textOverlay.y - textHeight / 2,
+                bottom: textOverlay.y + textHeight / 2
+            };
+
+            if (x >= textBounds.left && x <= textBounds.right && 
+                y >= textBounds.top && y <= textBounds.bottom) {
+                isDraggingText = true;
+                dragOffsetX = textOverlay.x - x;
+                dragOffsetY = textOverlay.y - y;
+            }
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDraggingText = false;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        isDraggingText = false;
+        canvas.style.cursor = 'default';
+    });
 
     // Reset functionality
     resetBtn.addEventListener('click', () => {
@@ -295,5 +426,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(originalImage, 0, 0);
         }
+
+        // Reset text overlay
+        textOverlay = null;
+        console.log('Reset text overlay');
     });
+
+    // Initialize text controls
+    initializeTextControls();
 });
