@@ -201,23 +201,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Parse analysis and set adjustments
         if (analysis.brightness) {
             if (analysis.brightness.toLowerCase().includes('poor')) {
-                adjustments.brightness += 30;
+                adjustments.brightness += 10;
             }
         }
         if (analysis.contrast) {
             if (analysis.contrast.toLowerCase().includes('poor')) {
-                adjustments.contrast += 30;
+                adjustments.contrast += 10;
             }
         }
         if (analysis.saturation) {
             if (analysis.saturation.toLowerCase().includes('poor')) {
-                adjustments.saturation += 30;
+                adjustments.saturation += 10;
             }
         }
         if (analysis.sharpness) {
             if (analysis.sharpness.toLowerCase().includes('poor') || 
                 analysis.sharpness.toLowerCase().includes('blurry')) {
-                adjustments.sharpness += 30;
+                adjustments.sharpness += 10;
             }
         }
 
