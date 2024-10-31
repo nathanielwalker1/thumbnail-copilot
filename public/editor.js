@@ -295,16 +295,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Draw text overlay
     function drawTextOverlay() {
         if (textOverlay) {
-            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
-            ctx.fillStyle = textOverlay.color;
+            ctx.save(); // Save the current state of the context
 
-            // Visual feedback during dragging
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            
+            // Set the fill style based on dragging state
             if (isDraggingText) {
-                ctx.fillStyle = 'rgba(255, 255, 0, 0.7)'; // Change color to yellow with transparency
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; // Add shadow for depth
-                ctx.shadowBlur = 10; // Blur effect for shadow
+                ctx.fillStyle = '#6C5CE7'; // Use brand color
+                ctx.globalAlpha = 0.7; // Set transparency
             } else {
-                ctx.shadowColor = 'transparent'; // Reset shadow when not dragging
+                ctx.fillStyle = textOverlay.color; // Use the original color
+                ctx.globalAlpha = 1.0; // Reset transparency
             }
 
             ctx.textAlign = 'center'; // Center text horizontally
@@ -312,6 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Draw the text
             ctx.fillText(textOverlay.text, textOverlay.x, textOverlay.y);
+
+            ctx.restore(); // Restore the context to its previous state
         }
     }
 
@@ -494,6 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     canvas.addEventListener('mouseup', () => {
         isDraggingText = false; // Stop dragging on mouse up
+        applyAdjustments(); // Ensure immediate redraw when dragging stops
     });
 
     canvas.addEventListener('mouseleave', () => {
