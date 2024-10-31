@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const colorPicker = document.getElementById('colorPicker');
     const textSizeSlider = document.getElementById('textSize');
     const addTextBtn = document.querySelector('.add-text-btn');
+    const suggestedTextBtn = document.querySelector('.suggested-text-btn');
 
     // Initialize state
     let originalImage = null; // Store the original image
@@ -555,4 +556,36 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.addEventListener('touchend', () => {
         isDraggingText = false; // Stop dragging on touch end
     });
+
+    suggestedTextBtn.addEventListener('click', applySuggestedText);
+
+    // Function to handle suggested text click
+    function applySuggestedText() {
+        const suggestedText = suggestedTextBtn.textContent.replace(/"/g, ''); // Remove quotes
+        
+        // Update the text overlay with suggested text
+        textOverlay = {
+            text: suggestedText,
+            font: fontSelect.value,
+            color: colorPicker.value,
+            size: parseInt(textSizeSlider.value),
+            x: canvas.width / 2,  // Center horizontally
+            y: canvas.height / 2, // Center vertically
+            boundingBox: {
+                left: null,
+                right: null,
+                top: null,
+                bottom: null
+            },
+            isDragging: false,
+            dragOffsetX: 0,
+            dragOffsetY: 0
+        };
+        
+        // Update custom text input to match
+        customTextInput.value = suggestedText;
+        
+        // Redraw canvas with new text
+        applyAdjustments();
+    }
 });

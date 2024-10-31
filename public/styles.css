@@ -555,3 +555,17 @@ h3 {
 .canvas {
     user-select: none; /* Prevent text selection */
 }
+
+/* Suggested text button interaction styles */
+.suggested-text-btn {
+    cursor: pointer; /* Change cursor to pointer */
+    transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
+
+.suggested-text-btn:hover {
+    background-color: #f0f0f0; /* Light background on hover */
+}
+
+.suggested-text-btn:active {
+    background-color: #e0e0e0; /* Darker background when active */
+}
