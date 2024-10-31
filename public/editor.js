@@ -343,13 +343,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize text controls with real-time updates
     function initializeTextControls() {
-        // Font selection - real-time update
         fontSelect.addEventListener('change', () => {
-            if (textOverlay) {
-                textOverlay.font = fontSelect.value;
-                applyAdjustments(); // This will redraw everything including text
-                console.log('Font updated:', textOverlay.font);
-            }
+            const selectedFont = fontSelect.value;
+            
+            // Create a test element with absolute positioning to prevent layout shifts
+            const testText = document.createElement('span');
+            testText.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                top: -9999px;
+                left: -9999px;
+                fontFamily: ${selectedFont};
+            `;
+            testText.textContent = 'Test';
+            document.body.appendChild(testText);
+            
+            // Wait for font to load
+            document.fonts.load(`16px ${selectedFont}`).then(() => {
+                if (textOverlay) {
+                    textOverlay.font = selectedFont;
+                    applyAdjustments();
+                }
+                document.body.removeChild(testText);
+            });
         });
 
         // Color picker - real-time update
