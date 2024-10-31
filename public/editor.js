@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Declare global variables for dragging state and offsets
+    let isDraggingText = false; // Track if text is being dragged
+    let dragOffsetX = 0; // Offset for dragging in the X direction
+    let dragOffsetY = 0; // Offset for dragging in the Y direction
+
     // Initialize DOM elements
     const canvas = document.getElementById('imageCanvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -19,10 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
         saturation: 0,
         sharpness: 0
     };
-    let textOverlay = null; // Store a single text overlay
-    let isDraggingText = false; // Track dragging state
-    let dragOffsetX = 0; // Offset for dragging
-    let dragOffsetY = 0; // Offset for dragging
+    let textOverlay = { // Store a single text overlay
+        text: null,
+        font: null,
+        color: null,
+        size: null,
+        x: null, // Centered by default
+        y: null, // Centered by default
+        boundingBox: { // New property for bounding box
+            left: null,
+            right: null,
+            top: null,
+            bottom: null
+        },
+        isDragging: false, // New property for drag state
+        dragOffsetX: 0, // New property for mouse offset data
+        dragOffsetY: 0, // New property for mouse offset data
+        lineNumbers: [] // New property for current line numbers
+    };
 
     // Load stored data
     const imageData = sessionStorage.getItem('uploadedImage');
@@ -255,9 +274,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 applySharpness();
             }
 
-            // Draw text overlay
+            // Draw text overlay after image adjustments
             drawTextOverlay(); // Ensure this function is called correctly
         });
+    }
+
+    // Function to calculate text dimensions
+    function calculateTextDimensions(text, font, size, padding = 10) {
+        ctx.font = `${size}px ${font}`; // Set the font style
+        const metrics = ctx.measureText(text); // Measure the text
+        const width = metrics.width + padding; // Add padding to width
+        const height = size + padding; // Add padding to height (approximate height)
+        
+        return {
+            width: width,
+            height: height
+        };
     }
 
     // Draw text overlay
@@ -265,6 +297,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (textOverlay) {
             ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
             ctx.fillStyle = textOverlay.color;
+
+            // Visual feedback during dragging
+            if (isDraggingText) {
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.7)'; // Change color to yellow with transparency
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; // Add shadow for depth
+                ctx.shadowBlur = 10; // Blur effect for shadow
+            } else {
+                ctx.shadowColor = 'transparent'; // Reset shadow when not dragging
+            }
+
             ctx.textAlign = 'center'; // Center text horizontally
             ctx.textBaseline = 'middle'; // Center text vertically
 
@@ -325,81 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add mouse event listeners for text dragging
-    canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        if (textOverlay) {
-            // Check if mouse is over text
-            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
-            const textWidth = ctx.measureText(textOverlay.text).width;
-            const textHeight = parseInt(textOverlay.size); // Approximate height
-
-            // Define text bounds
-            const textBounds = {
-                left: textOverlay.x - textWidth / 2,
-                right: textOverlay.x + textWidth / 2,
-                top: textOverlay.y - textHeight / 2,
-                bottom: textOverlay.y + textHeight / 2
-            };
-
-            // Check if mouse is over text
-            if (x >= textBounds.left && x <= textBounds.right && 
-                y >= textBounds.top && y <= textBounds.bottom) {
-                canvas.style.cursor = 'move';
-                
-                if (isDraggingText) {
-                    requestAnimationFrame(() => {
-                        textOverlay.x = x; // Corrected
-                        textOverlay.y = y; // Corrected
-                        applyAdjustments(); // Redraw everything
-                    });
-                }
-            } else {
-                canvas.style.cursor = 'default';
-            }
-        }
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        if (textOverlay) {
-            // Check if click is on text
-            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
-            const textWidth = ctx.measureText(textOverlay.text).width;
-            const textHeight = parseInt(textOverlay.size);
-
-            // Define text bounds
-            const textBounds = {
-                left: textOverlay.x - textWidth / 2,
-                right: textOverlay.x + textWidth / 2,
-                top: textOverlay.y - textHeight / 2,
-                bottom: textOverlay.y + textHeight / 2
-            };
-
-            if (x >= textBounds.left && x <= textBounds.right && 
-                y >= textBounds.top && y <= textBounds.bottom) {
-                isDraggingText = true;
-                dragOffsetX = textOverlay.x - x;
-                dragOffsetY = textOverlay.y - y;
-            }
-        }
-    });
-
-    canvas.addEventListener('mouseup', () => {
-        isDraggingText = false;
-    });
-
-    canvas.addEventListener('mouseleave', () => {
-        isDraggingText = false;
-        canvas.style.cursor = 'default';
-    });
-
     // Reset functionality
     resetBtn.addEventListener('click', () => {
         // Reset adjustments
@@ -455,4 +422,133 @@ document.addEventListener('DOMContentLoaded', () => {
     if (downloadBtn) {
         downloadBtn.addEventListener('click', downloadImage);
     }
+
+    // Enhance Mouse Event Handlers
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width; // Calculate scale factor for X
+        const scaleY = canvas.height / rect.height; // Calculate scale factor for Y
+        const x = (e.clientX - rect.left) * scaleX; // Adjusted X coordinate
+        const y = (e.clientY - rect.top) * scaleY; // Adjusted Y coordinate
+
+        if (textOverlay && isDraggingText) {
+            // Update text position using the initial offset
+            textOverlay.x = x + dragOffsetX; 
+            textOverlay.y = y + dragOffsetY; 
+            applyAdjustments(); // Redraw everything
+        }
+
+        if (textOverlay) {
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            const textWidth = ctx.measureText(textOverlay.text).width;
+            const textHeight = parseInt(textOverlay.size);
+
+            const textBounds = {
+                left: textOverlay.x - textWidth / 2,
+                right: textOverlay.x + textWidth / 2,
+                top: textOverlay.y - textHeight / 2,
+                bottom: textOverlay.y + textHeight / 2
+            };
+
+            // Check if mouse is over text
+            if (x >= textBounds.left && x <= textBounds.right && 
+                y >= textBounds.top && y <= textBounds.bottom) {
+                canvas.style.cursor = 'move';
+            } else {
+                canvas.style.cursor = 'default';
+            }
+        }
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width; // Calculate scale factor for X
+        const scaleY = canvas.height / rect.height; // Calculate scale factor for Y
+        const x = (e.clientX - rect.left) * scaleX; // Adjusted X coordinate
+        const y = (e.clientY - rect.top) * scaleY; // Adjusted Y coordinate
+
+        if (textOverlay) {
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            const textWidth = ctx.measureText(textOverlay.text).width;
+            const textHeight = parseInt(textOverlay.size);
+
+            const textBounds = {
+                left: textOverlay.x - textWidth / 2,
+                right: textOverlay.x + textWidth / 2,
+                top: textOverlay.y - textHeight / 2,
+                bottom: textOverlay.y + textHeight / 2
+            };
+
+            if (x >= textBounds.left && x <= textBounds.right && 
+                y >= textBounds.top && y <= textBounds.bottom) {
+                isDraggingText = true;
+                // Calculate the offset from the text position
+                dragOffsetX = textOverlay.x - x;
+                dragOffsetY = textOverlay.y - y;
+
+                // Prevent text selection
+                e.preventDefault();
+            }
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDraggingText = false; // Stop dragging on mouse up
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        isDraggingText = false; // Stop dragging if mouse leaves canvas
+        canvas.style.cursor = 'default'; // Reset cursor
+    });
+
+    // Add touch event handlers for mobile support
+    canvas.addEventListener('touchstart', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width; // Calculate scale factor for X
+        const scaleY = canvas.height / rect.height; // Calculate scale factor for Y
+        const x = (e.touches[0].clientX - rect.left) * scaleX; // Adjusted X coordinate
+        const y = (e.touches[0].clientY - rect.top) * scaleY; // Adjusted Y coordinate
+
+        if (textOverlay) {
+            ctx.font = `${textOverlay.size}px ${textOverlay.font}`;
+            const textWidth = ctx.measureText(textOverlay.text).width;
+            const textHeight = parseInt(textOverlay.size);
+
+            const textBounds = {
+                left: textOverlay.x - textWidth / 2,
+                right: textOverlay.x + textWidth / 2,
+                top: textOverlay.y - textHeight / 2,
+                bottom: textOverlay.y + textHeight / 2
+            };
+
+            if (x >= textBounds.left && x <= textBounds.right && 
+                y >= textBounds.top && y <= textBounds.bottom) {
+                isDraggingText = true;
+                dragOffsetX = textOverlay.x - x;
+                dragOffsetY = textOverlay.y - y;
+
+                // Prevent text selection
+                e.preventDefault();
+            }
+        }
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width; // Calculate scale factor for X
+        const scaleY = canvas.height / rect.height; // Calculate scale factor for Y
+        const x = (e.touches[0].clientX - rect.left) * scaleX; // Adjusted X coordinate
+        const y = (e.touches[0].clientY - rect.top) * scaleY; // Adjusted Y coordinate
+
+        if (textOverlay && isDraggingText) {
+            // Smooth position updates
+            textOverlay.x = x; 
+            textOverlay.y = y; 
+            applyAdjustments(); // Redraw everything
+        }
+    });
+
+    canvas.addEventListener('touchend', () => {
+        isDraggingText = false; // Stop dragging on touch end
+    });
 });
